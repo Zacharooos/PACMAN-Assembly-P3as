@@ -24,7 +24,10 @@ ON				EQU		0d		; Estado Desligado.
 OFF				EQU		1d		; Estado Ligado.
 
 PACMAN_CRT		EQU 	'Z'		; Caractér para represertar o PACMAN
-PACMAN_SPAWN	EQU		5D9h	; 
+PACMAN_SPAWN_R	EQU		22d
+PACMAN_SPAWN_C	EQU		46d
+
+PACMAN_DIST		EQU		775h	; Distância de 1909 Caracteres após o início da string 1
 COLUMN_JUMP		EQU		51h		;
 
 ;------------------------------------------------------------------------------
@@ -49,7 +52,7 @@ Pac_Address		WORD	0d		;Variável que guarda a posição atual do PAC (Endereço)
 Pac_Move_Top	WORD	OFF		;Comando para mover para cima
 Pac_Move_Right	WORD	OFF		;Comando para mover para direita
 Pac_Move_Bottom	WORD	OFF		;Comando para mover para baixo
-Pac_Move_Left	WORD	OFF		;;Comando para mover para esquerda
+Pac_Move_Left	WORD	OFF		;Comando para mover para esquerda
 
 LINHA1NIVEL     STR 	'################################################################################', FIM_TEXTO
 LINHA2NIVEL     STR 	'#=-=-=-=-=-=-PLACAR:00=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=VIDAS:00=-=-=-=-=-=-#', FIM_TEXTO
@@ -83,10 +86,10 @@ LINHA24NIVEL 	STR 	'############################################################
 ;Interrupções definem a parada do código para executar uma informação prioritária.
 ;------------------------------------------------------------------------------
                 ORIG    FE00h
-INT0           	WORD	Key_Pressed_Top
-INT1			WORD	Key_Pressed_Right
-INT2			WORD	Key_Pressed_Bottom
-INT3			WORD	Key_Pressed_Left
+INT0           	WORD	Key_Pr_Top
+INT1			WORD	Key_Pr_Right
+INT2			WORD	Key_Pr_Bottom
+INT3			WORD	Key_Pr_Left
 
 				ORIG    FE0Fh
 INT15			WORD	Timer
@@ -174,6 +177,97 @@ PrintTela: 		PUSH R1
 	EWTELA: 	POP R2
 				POP R1
 				RET
+
+;------------------------------------------------------------------------------
+; Função SetPacman
+;------------------------------------------------------------------------------
+SetPacman:		PUSH R1
+				PUSH R2
+;----------------------------;
+; Sub Função AddressPacman 	 ;
+;----------------------------;
+
+				MOV R1, LINHA1NIVEL			;Endereço do primeiro caractér da linha 1
+				ADD R1, PACMAN_DIST			;Adicionar a esse endereço a distância que queremos pular para chegar no spawn
+				MOV M[Pac_Address], R1		;Guarda em Pac_Address o endereço de memória onde o PACMAN está (R1)
+				MOV R2, PACMAN_CRT			;Define o R2 como o caractér "Z" (meu pacman)
+				MOV M[R1], R2				;Define a posição de memória R1 como "Z"
+
+;----------------------------;
+; Sub Função PrintPacman 	 ;
+;----------------------------;
+
+				MOV R1, PACMAN_SPAWN_R
+				MOV M[Pac_Row], R1
+
+				MOV R2, PACMAN_SPAWN_C
+				MOV M[Pac_Column], R2
+
+				SHL R1, ROW_SHIFT
+				OR 	R1, R2
+
+				MOV M[CURSOR],R1
+				MOV R1, PACMAN_CRT
+				MOV M[IO_WRITE], R1
+
+				POP R2
+				POP R1
+				RET
+
+;------------------------------------------------------------------------------
+; Funções de Interrupção (movimento)
+;------------------------------------------------------------------------------
+;---------------------------------------------;
+; Sub Função Recla Pressionada para o topo    ;
+;---------------------------------------------;
+Key_Pr_Top: 	PUSH R1
+				PUSH R2
+
+				POP R2
+				POP R1
+				RTI
+
+;---------------------------------------------;
+; Sub Função Recla Pressionada para a direita ;
+;---------------------------------------------;
+Key_Pr_Right: 	PUSH R1
+				PUSH R2
+
+				POP R2
+				POP R1
+				RTI
+
+;---------------------------------------------;
+; Sub Função Recla Pressionada para baixo     ;
+;---------------------------------------------;
+Key_Pr_Bottom: 	PUSH R1
+				PUSH R2
+
+				POP R2
+				POP R1
+				RTI
+
+;---------------------------------------------;
+; Sub Função Recla Pressionada para a esqueda ;
+;---------------------------------------------;
+Key_Pr_Left: 	PUSH R1
+				PUSH R2
+
+				POP R2
+				POP R1
+				RTI
+
+;------------------------------------------------------------------------------
+; Funções de Tempo
+;------------------------------------------------------------------------------
+Timer: 			PUSH R1
+				PUSH R2
+
+				POP R2
+				POP R1
+				RTI
+
+
 ;------------------------------------------------------------------------------
 ; Função Main
 ;------------------------------------------------------------------------------
