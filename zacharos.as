@@ -225,6 +225,14 @@ SetPacman:		PUSH 	R1
 Key_Pr_Top: 	PUSH 	R1
 				PUSH 	R2
 
+				MOV 	R1, ON 
+				MOV		R2, OFF 
+
+				MOV 	M[Move_Up_Key_Pressed], R1
+				MOV 	M[Move_Right_Key_Pressed], R2
+				MOV 	M[Move_Bottom_Key_Pressed], R2
+				MOV 	M[Move_Left_Key_Pressed], R2
+
 				POP 	R2
 				POP 	R1
 				RTI
@@ -234,6 +242,14 @@ Key_Pr_Top: 	PUSH 	R1
 ;---------------------------------------------;
 Key_Pr_Right: 	PUSH 	R1
 				PUSH 	R2
+
+				MOV 	R1, ON 
+				MOV		R2, OFF 
+
+				MOV 	M[Move_Up_Key_Pressed], R2
+				MOV 	M[Move_Right_Key_Pressed], R1
+				MOV 	M[Move_Bottom_Key_Pressed], R2
+				MOV 	M[Move_Left_Key_Pressed], R2
 
 				POP	 	R2
 				POP 	R1
@@ -245,6 +261,14 @@ Key_Pr_Right: 	PUSH 	R1
 Key_Pr_Bottom: 	PUSH 	R1
 				PUSH 	R2
 
+				MOV 	R1, ON 
+				MOV		R2, OFF 
+
+				MOV 	M[Move_Up_Key_Pressed], R2
+				MOV 	M[Move_Right_Key_Pressed], R2
+				MOV 	M[Move_Bottom_Key_Pressed], R1
+				MOV 	M[Move_Left_Key_Pressed], R2
+
 				POP 	R2
 				POP 	R1
 				RTI
@@ -254,6 +278,14 @@ Key_Pr_Bottom: 	PUSH 	R1
 ;---------------------------------------------;
 Key_Pr_Left: 	PUSH 	R1
 				PUSH 	R2
+
+				MOV 	R1, ON 
+				MOV		R2, OFF 
+
+				MOV 	M[Move_Up_Key_Pressed], R2
+				MOV 	M[Move_Right_Key_Pressed], R2
+				MOV 	M[Move_Bottom_Key_Pressed], R2
+				MOV 	M[Move_Left_Key_Pressed], R1
 
 				POP 	R2
 				POP 	R1
