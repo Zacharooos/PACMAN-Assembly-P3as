@@ -126,95 +126,95 @@ INT15			WORD	Timer
 ;------------------------------------------------------------------------------
 ; Função PrintString
 ;------------------------------------------------------------------------------
-PrintString:	PUSH R1
-				PUSH R2
+PrintString:	PUSH 	R1
+				PUSH 	R2
 	
-	WSTRING:	MOV R1, M[TextIndex]		;R1 = Pos de onde parou no texto
-				MOV R1, M[R1]				;R1 = CHAR -> Posição do char no texto base
+	WSTRING:	MOV 	R1, M[TextIndex]		;R1 = Pos de onde parou no texto
+				MOV 	R1, M[R1]				;R1 = CHAR -> Posição do char no texto base
 
-				CMP R1, FIM_TEXTO			;Se R1 == FIM_TEXTO ('@'), Fim da String, pula para EWSTRING
-				JMP.Z EWSTRING				
-				MOV M[IO_WRITE], R1			;Caso não, move para IO_WRITE o caracter que queremos escrever
+				CMP 	R1, FIM_TEXTO			;Se R1 == FIM_TEXTO ('@'), Fim da String, pula para EWSTRING
+				JMP.Z 	EWSTRING				
+				MOV 	M[IO_WRITE], R1			;Caso não, move para IO_WRITE o caracter que queremos escrever
 
-				INC M[ColumnIndex]			;Adiciona + 1 na coordenada de colunas do cursor
-				INC M[TextIndex]			;Passa o marcador para a próxima letra
+				INC 	M[ColumnIndex]			;Adiciona + 1 na coordenada de colunas do cursor
+				INC 	M[TextIndex]			;Passa o marcador para a próxima letra
 
-				MOV R1, M[RowIndex]			;Redefinindo o cursor -> Definindo parte esquerda (linha)
-				SHL R1, ROW_SHIFT			;Formatando parte esquerda
-				MOV R2, M[ColumnIndex]		;definindo parte direita (coluna)
-				OR R1, R2					;juntando ambas as partes
+				MOV 	R1, M[RowIndex]			;Redefinindo o cursor -> Definindo parte esquerda (linha)
+				SHL 	R1, ROW_SHIFT			;Formatando parte esquerda
+				MOV 	R2, M[ColumnIndex]		;definindo parte direita (coluna)
+				OR 		R1, R2					;juntando ambas as partes
 
-				MOV M[CURSOR], R1			;Define cursos como o "frame" que queremos inserir
-				JMP WSTRING					;Retorna para repetir o processo até o fim de linha
+				MOV 	M[CURSOR], R1			;Define cursos como o "frame" que queremos inserir
+				JMP 	WSTRING					;Retorna para repetir o processo até o fim de linha
 
-	EWSTRING:	INC M[RowIndex]
-				MOV R1, 0d
-				MOV M[ColumnIndex], R1
-				MOV R1, M[RowIndex]
-				SHL R1, 8d
-				MOV M[CURSOR], R1
+	EWSTRING:	INC 	M[RowIndex]
+				MOV 	R1, 0d
+				MOV 	M[ColumnIndex], R1
+				MOV 	R1, M[RowIndex]
+				SHL 	R1, 8d
+				MOV 	M[CURSOR], R1
 				
-				POP R2
-				POP R1
+				POP 	R2
+				POP 	R1
 				RET
 ;------------------------------------------------------------------------------
 ; Função PrintTela
 ;------------------------------------------------------------------------------
-PrintTela: 		PUSH R1						
-				PUSH R2						
-				MOV R1, LINHA1NIVEL			;R1 recebe a string da primeira linha da Tela
-				MOV M[TextIndex], R1		;Guarda a primeira posição da primeira string
-				MOV R2, 0d 					;R2 = 0 para contar quantas strings imprimiremos
+PrintTela: 		PUSH 	R1						
+				PUSH 	R2						
+				MOV 	R1, LINHA1NIVEL			;R1 recebe a string da primeira linha da Tela
+				MOV 	M[TextIndex], R1		;Guarda a primeira posição da primeira string
+				MOV 	R2, 0d 					;R2 = 0 para contar quantas strings imprimiremos
 
-	WTELA:		CMP R2, 24d					;Compara R2 com 24, quando for 24, todas as strings estarão na tela
-				JMP.Z EWTELA				;Pula para o fim caso a comparão acima dê TRUE
+	WTELA:		CMP 	R2, 24d					;Compara R2 com 24, quando for 24, todas as strings estarão na tela
+				JMP.Z 	EWTELA				;Pula para o fim caso a comparão acima dê TRUE
 
-				CALL PrintString			;Chama a função que imprime a string
-				INC R2						;Acrescenta o contador em 1
-				INC M[TextIndex]			;Acrescenta a posição da string em 1 (vai para a prox string)
-				JMP WTELA					;Retorna para a comparação
+				CALL 	PrintString			;Chama a função que imprime a string
+				INC 	R2						;Acrescenta o contador em 1
+				INC 	M[TextIndex]			;Acrescenta a posição da string em 1 (vai para a prox string)
+				JMP 	WTELA					;Retorna para a comparação
 
-	EWTELA: 	POP R2
-				POP R1
+	EWTELA: 	POP 	R2
+				POP 	R1
 				RET
 
 ;------------------------------------------------------------------------------
 ; Função SetPacman
 ;------------------------------------------------------------------------------
-SetPacman:		PUSH R1
-				PUSH R2
+SetPacman:		PUSH 	R1
+				PUSH 	R2
 ;----------------------------;
 ; Sub Função AddressPacman 	 ;
 ;----------------------------;
 
-				MOV R1, LINHA1NIVEL			;Endereço do primeiro caractér da linha 1
-				ADD R1, PACMAN_DIST			;Adicionar a esse endereço a distância que queremos pular para chegar no spawn
-				MOV M[Pac_Address], R1		;Guarda em Pac_Address o endereço de memória onde o PACMAN está (R1)
-				MOV R2, PACMAN_CRT			;Define o R2 como o caractér "Z" (meu pacman)
-				MOV M[R1], R2				;Define a posição de memória R1 como "Z"
+				MOV 	R1, LINHA1NIVEL			;Endereço do primeiro caractér da linha 1
+				ADD 	R1, PACMAN_DIST			;Adicionar a esse endereço a distância que queremos pular para chegar no spawn
+				MOV 	M[Pac_Address], R1		;Guarda em Pac_Address o endereço de memória onde o PACMAN está (R1)
+				MOV 	R2, PACMAN_CRT			;Define o R2 como o caractér "Z" (meu pacman)
+				MOV 	M[R1], R2				;Define a posição de memória R1 como "Z"
 
 ;----------------------------;
 ; Sub Função PrintPacman 	 ;
 ;----------------------------;
 
-				MOV R1, PACMAN_SPAWN_R		;Funcionan com a função WriteCharacter, R1 recebe o valor 21, representando a linha da modificação
-				MOV M[Pac_Row], R1			;Define a linha do pacman como sendo R1 (21)
+				MOV 	R1, PACMAN_SPAWN_R		;Funcionan com a função WriteCharacter, R1 recebe o valor 21, representando a linha da modificação
+				MOV 	M[Pac_Row], R1			;Define a linha do pacman como sendo R1 (21)
 
-				MOV R2, PACMAN_SPAWN_C		;Mesmo processo, mas com a coluna
-				MOV M[Pac_Column], R2		; ...
+				MOV 	R2, PACMAN_SPAWN_C		;Mesmo processo, mas com a coluna
+				MOV 	M[Pac_Column], R2		; ...
 
-				SHL R1, ROW_SHIFT			;Formatação explicada em WriteCharacter
-				OR 	R1, R2					; ...
+				SHL 	R1, ROW_SHIFT			;Formatação explicada em WriteCharacter
+				OR 		R1, R2					; ...
 
-				MOV M[CURSOR],R1			; Define cursor como o endereço gerado por R1 || R2
-				MOV R1, PACMAN_CRT			; Define R1 como o Caracter "Z"
-				MOV M[IO_WRITE], R1			; Escreve na posição definida o Caracter "Z"
+				MOV 	M[CURSOR],R1			; Define cursor como o endereço gerado por R1 || R2
+				MOV 	R1, PACMAN_CRT			; Define R1 como o Caracter "Z"
+				MOV 	M[IO_WRITE], R1			; Escreve na posição definida o Caracter "Z"
 
 ;----------------------------;
 ; Encerramento 	             ;
 ;----------------------------;
-				POP R2
-				POP R1
+				POP 	R2
+				POP 	R1
 				RET
 ;------------------------------------------------------------------------------
 ; Funções de Interrupção (movimento)
@@ -222,52 +222,85 @@ SetPacman:		PUSH R1
 ;---------------------------------------------;
 ; Sub Função Recla Pressionada para o topo    ;
 ;---------------------------------------------;
-Key_Pr_Top: 	PUSH R1
-				PUSH R2
+Key_Pr_Top: 	PUSH 	R1
+				PUSH 	R2
 
-				POP R2
-				POP R1
+				POP 	R2
+				POP 	R1
 				RTI
 
 ;---------------------------------------------;
 ; Sub Função Recla Pressionada para a direita ;
 ;---------------------------------------------;
-Key_Pr_Right: 	PUSH R1
-				PUSH R2
+Key_Pr_Right: 	PUSH 	R1
+				PUSH 	R2
 
-				POP R2
-				POP R1
+				POP	 	R2
+				POP 	R1
 				RTI
 
 ;---------------------------------------------;
 ; Sub Função Recla Pressionada para baixo     ;
 ;---------------------------------------------;
-Key_Pr_Bottom: 	PUSH R1
-				PUSH R2
+Key_Pr_Bottom: 	PUSH 	R1
+				PUSH 	R2
 
-				POP R2
-				POP R1
+				POP 	R2
+				POP 	R1
 				RTI
 
 ;---------------------------------------------;
 ; Sub Função Recla Pressionada para a esqueda ;
 ;---------------------------------------------;
-Key_Pr_Left: 	PUSH R1
-				PUSH R2
+Key_Pr_Left: 	PUSH 	R1
+				PUSH 	R2
 
-				POP R2
-				POP R1
+				POP 	R2
+				POP 	R1
 				RTI
 
 ;------------------------------------------------------------------------------
 ; Funções de Tempo
 ;------------------------------------------------------------------------------
-Timer: 			PUSH R1
-				PUSH R2
+;---------------------------------------------;
+; Função que realiza a "contagem" do tempo    ;
+;---------------------------------------------;
+Timer: 			PUSH 	R1
 
-				POP R2
-				POP R1
+				MOV 	R1, M[Pac_Move_Top]		;Guarda em R1 o valor se sinal da Variável que diz se o PacMan move-se ou não.
+				CMP 	R1, ON					;Compara para checar se o valor está ligado
+				CALL.Z 	MoveTop				;Caso esteja, executa a função de movimentação
+
+				MOV 	R1, M[Pac_Move_Right]
+				CMP 	R1, ON
+				CALL.Z 	MoveRight
+
+				MOV 	R1, M[Pac_Move_Top]
+				CMP 	R1, ON
+				CALL.Z 	MoveBottom
+
+				MOV 	R1, M[Pac_Move_Top]
+				CMP 	R1, ON
+				CALL.Z 	MoveLeft
+
+				CALL 	StartTimer				;"Dispara" o tempo para acontecer um ciclo 
+
+				POP 	R1
 				RTI
+
+;---------------------------------------------;
+; Função que "dispara" o tempo                ;
+;---------------------------------------------;
+StartTimer:		PUSH 	R1
+
+				MOV 	R1, TIMER_VALUE
+				MOV 	TIMER_BUFFER, R1
+
+				MOV 	R1, ON
+				MOV 	TIMER_STATUS, R1
+
+				POP 	R1
+				RET
 
 
 ;------------------------------------------------------------------------------
