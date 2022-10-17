@@ -294,10 +294,10 @@ Timer: 			PUSH 	R1
 StartTimer:		PUSH 	R1
 
 				MOV 	R1, TIMER_VALUE
-				MOV 	TIMER_BUFFER, R1
+				MOV 	M[TIMER_BUFFER], R1
 
 				MOV 	R1, ON
-				MOV 	TIMER_STATUS, R1
+				MOV 	M[TIMER_STATUS], R1
 
 				POP 	R1
 				RET
