@@ -24,8 +24,8 @@ ON				EQU		0d		; Estado Desligado.
 OFF				EQU		1d		; Estado Ligado.
 
 PACMAN_CRT		EQU 	'Z'		; Caractér para represertar o PACMAN
-PACMAN_SPAWN_R	EQU		22d
-PACMAN_SPAWN_C	EQU		46d
+PACMAN_SPAWN_R	EQU		21d
+PACMAN_SPAWN_C	EQU		45d
 
 PACMAN_DIST		EQU		775h	; Distância de 1909 Caracteres após o início da string 1
 COLUMN_JUMP		EQU		51h		;
@@ -197,23 +197,25 @@ SetPacman:		PUSH R1
 ; Sub Função PrintPacman 	 ;
 ;----------------------------;
 
-				MOV R1, PACMAN_SPAWN_R
-				MOV M[Pac_Row], R1
+				MOV R1, PACMAN_SPAWN_R		;Funcionan com a função WriteCharacter, R1 recebe o valor 21, representando a linha da modificação
+				MOV M[Pac_Row], R1			;Define a linha do pacman como sendo R1 (21)
 
-				MOV R2, PACMAN_SPAWN_C
-				MOV M[Pac_Column], R2
+				MOV R2, PACMAN_SPAWN_C		;Mesmo processo, mas com a coluna
+				MOV M[Pac_Column], R2		; ...
 
-				SHL R1, ROW_SHIFT
-				OR 	R1, R2
+				SHL R1, ROW_SHIFT			;Formatação explicada em WriteCharacter
+				OR 	R1, R2					; ...
 
-				MOV M[CURSOR],R1
-				MOV R1, PACMAN_CRT
-				MOV M[IO_WRITE], R1
+				MOV M[CURSOR],R1			; Define cursor como o endereço gerado por R1 || R2
+				MOV R1, PACMAN_CRT			; Define R1 como o Caracter "Z"
+				MOV M[IO_WRITE], R1			; Escreve na posição definida o Caracter "Z"
 
+;----------------------------;
+; Encerramento 	             ;
+;----------------------------;
 				POP R2
 				POP R1
 				RET
-
 ;------------------------------------------------------------------------------
 ; Funções de Interrupção (movimento)
 ;------------------------------------------------------------------------------
@@ -279,6 +281,7 @@ Main:			ENI
 				MOV		M[ CURSOR ], R1
 
 				CALL 	PrintTela
+				CALL 	SetPacman
 
 				
 Cycle: 			BR		Cycle
