@@ -8,7 +8,7 @@ IO_READ         EQU     FFFFh	; Recebe caracteres da teclado na janela de texto
 IO_WRITE        EQU     FFFEh	; Permite escrever um dado caractér na janela de texto
 IO_STATUS       EQU     FFFDh	; Teste se houve tecla apertada na janela de texto
 INITIAL_SP      EQU     FDFFh	
-CURSOR		    EQU     FFFCh	; Insere o cursos na janela de texto, controla onde será inserido próximo caracter
+CURSOR		    EQU     FFFCh	; Insere o cursor na janela de texto, controla onde será inserido próximo caractere
 CURSOR_INIT		EQU		FFFFh
 
 ROW_POSITION	EQU		0d
@@ -28,8 +28,9 @@ PACMAN_SPAWN_R	EQU		21d
 PACMAN_SPAWN_C	EQU		45d
 
 PACMAN_DIST		EQU		6D2h	; Distância de 1909 Caracteres após o início da string 1
-COLUMN_JUMP		EQU		51h		; Distância até chegar ao caractér imediamente superior ou inferior
+LINE_JUMP		EQU		51h		; Distância até chegar ao caractér imediamente superior ou inferior
 
+MAX_SCORE		EQU 	150d 	; Quantidade de pontos máxima para encerrar o jogo
 ;------------------------------------------------------------------------------
 ; ZONA II: definicao de variaveis
 ;          Pseudo-instrucoes : WORD - palavra (16 bits)
@@ -54,8 +55,36 @@ Pac_Move_Right	WORD	OFF		;Comando para mover para direita
 Pac_Move_Bottom	WORD	OFF		;Comando para mover para baixo
 Pac_Move_Left	WORD	OFF		;Comando para mover para esquerda
 
+Ghost_Spawn_P1 	WORD	33Fh	;Número de casas que é necessário percorrer na memória para chegar no ponto de spawn
+Ghost_Spawn_P2 	WORD	373h
+Ghost_Spawn_P3 	WORD	6C0h
+Ghost_Spawn_P4 	WORD	73Fh
+
+;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+;	Ghosts							;
+;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+
+Ghost_Row1		WORD	11d		;Posição da linha de cada fantasma
+Ghost_Row2		WORD	11d
+Ghost_Row3		WORD	21d
+Ghost_Row4		WORD	22d
+
+Ghost_Column1 	WORD	47d		;Posição da coluna de cada fantasma
+Ghost_Column2	WORD	99d
+Ghost_Column3	WORD	52d
+Ghost_Column4	WORD	99d
+
+Ghost_Address1	WORD	0h		;Posição na memória do fantasma, vazios até chamar address ghosts
+Ghost_Address2	WORD	0h
+Ghost_Address3	WORD	0h
+Ghost_Address4	WORD	0h
+
+;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+;	Mapas							;
+;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+
 LINHA1NIVEL     STR 	'################################################################################', FIM_TEXTO
-LINHA2NIVEL     STR 	'#=-=-=-=-=-=-PLACAR:00=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=VIDAS:00=-=-=-=-=-=-#', FIM_TEXTO
+LINHA2NIVEL     STR 	'#=-=-=-=-=-=-PLACAR:000-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=VIDAS:00=-=-=-=-=-=-#', FIM_TEXTO
 LINHA3NIVEL     STR 	'################################################################################', FIM_TEXTO
 LINHA4NIVEL 	STR 	'#..............###########....................####.....###.....................#', FIM_TEXTO
 LINHA5NIVEL 	STR 	'#..............###########....................####.....###.....................#', FIM_TEXTO
@@ -64,7 +93,7 @@ LINHA7NIVEL 	STR 	'#....######....##.......##...##############...####...........
 LINHA8NIVEL 	STR 	'#....######....#####.#####...##|zacharos|##...#########...########.....#########', FIM_TEXTO
 LINHA9NIVEL 	STR 	'#....######....#####.#####...##############...#########...##...###.....###.....#', FIM_TEXTO
 LINHA10NIVEL 	STR 	'#....######..................#####....#####...............##...###.....###.....#', FIM_TEXTO
-LINHA11NIVEL 	STR 	'#....######....................................................###.............#', FIM_TEXTO
+LINHA11NIVEL 	STR 	'#....######.........X..........................................###......X......#', FIM_TEXTO
 LINHA12NIVEL 	STR 	'#....######..................#####....#####....................###.............#', FIM_TEXTO
 LINHA13NIVEL 	STR 	'#....######....#########################################.###...########...######', FIM_TEXTO
 LINHA14NIVEL 	STR 	'#....######....#########################################.###...########...######', FIM_TEXTO
@@ -74,12 +103,20 @@ LINHA17NIVEL 	STR 	'###########....##############################.##########.###
 LINHA18NIVEL 	STR 	'###########....##############################.##########.###...................#', FIM_TEXTO
 LINHA19NIVEL 	STR 	'#....................................................###.##############...######', FIM_TEXTO
 LINHA20NIVEL 	STR 	'#......####....#######################...####.####...###.##############...######', FIM_TEXTO
-LINHA21NIVEL 	STR 	'#......####....#######.........#######...##.....##...###.##########..........###', FIM_TEXTO
-LINHA22NIVEL 	STR 	'#......####..............................##.....##...........................###', FIM_TEXTO
+LINHA21NIVEL 	STR 	'#......####....#######....X....#######...##.....##...###.##########..........###', FIM_TEXTO
+LINHA22NIVEL 	STR 	'#......####..............................##.....##......................X....###', FIM_TEXTO
 LINHA23NIVEL 	STR 	'#......####..............###.............##.....###################..........###', FIM_TEXTO
 LINHA24NIVEL 	STR 	'################################################################################', FIM_TEXTO
 
+DEFEAT1			STR		'# = = = = = = = = = = = = #==========================# = = = = = = = = = = = = #', FIM_TEXTO
+DEFEAT2			STR		'# = = = = = = = = = = = = # = = VOCE PERDEU MESMO ?= # = = = = = = = = = = = = #', FIM_TEXTO
+DEFEAT3			STR		'# = = = = = = = = = = = = # = = = = =OTARIO= = = = = # = = = = = = = = = = = = #', FIM_TEXTO
+DEFEAT4			STR		'# = = = = = = = = = = = = #==========================# = = = = = = = = = = = = #', FIM_TEXTO
 
+VICTORY1		STR		'# = = = = = = = = = = = = #==========================# = = = = = = = = = = = = #', FIM_TEXTO
+VICTORY2		STR		'# = = = = = = = = = = = = #     PARECE QUE GANHOU    # = = = = = = = = = = = = #', FIM_TEXTO
+VICTORY3		STR		'# = = = = = = = = = = = = #        FOI SORTE         # = = = = = = = = = = = = #', FIM_TEXTO
+VICTORY4		STR		'# = = = = = = = = = = = = #==========================# = = = = = = = = = = = = #', FIM_TEXTO
 ;------------------------------------------------------------------------------
 ; ZONA II: definicao de tabela de interrupções
 ;------------------------------------------------------------------------------
@@ -103,26 +140,11 @@ INT15			WORD	Timer
                 JMP     Main
 
 ;------------------------------------------------------------------------------
-; Rotina de Interrupção WriteCharacter
+; ZONA IV - I: Funções PrintString
+;        conjunto de instrucoes Assembly que alteram explicitamente o conteúdo
+;	da tela de alguma forma.
 ;------------------------------------------------------------------------------
-;WriteCharacter: 
-;				PUSH R1
-;				PUSH R2
-;
-;
-;
-;				MOV		R1, 12d				;R1 = 12 = 00000000|00001100
-;				SHL		R1, 8d				;R1 = shiftleft 8 = 00001100|00000000
-;				MOV		R2, 40d				;R2 = 40 = 00000000|00101000
-;				OR 		R1, R2				;R1 or R2 = 00001100|00000000 OR 00000000|00101000 = 00001100|00101000
-;	
-;				MOV M[CURSOR], R1			;M[CURSOR] = Endereço do cursos recebe = 00001100|00101000 = cursor agora está na coluna 40, linha 12.
-;				MOV R1, 'A'					;R1 = 'A'
-;				MOV M[IO_WRITE], R1			;M[IO_WRITE] = R1 = 'A'
-;
-;				POP  R2
-;				POP  R1
-;				RTI
+
 ;------------------------------------------------------------------------------
 ; Função PrintString
 ;------------------------------------------------------------------------------
@@ -169,7 +191,7 @@ PrintTela: 		PUSH 	R1
 	WTELA:		CMP 	R2, 24d					;Compara R2 com 24, quando for 24, todas as strings estarão na tela
 				JMP.Z 	EWTELA					;Pula para o fim caso a comparão acima dê TRUE
 
-				CALL 	PrintString			;	Chama a função que imprime a string
+				CALL 	PrintString				;Chama a função que imprime a string
 				INC 	R2						;Acrescenta o contador em 1
 				INC 	M[TextIndex]			;Acrescenta a posição da string em 1 (vai para a prox string)
 				JMP 	WTELA					;Retorna para a comparação
@@ -178,9 +200,149 @@ PrintTela: 		PUSH 	R1
 				POP 	R1
 				RET
 
+
+
+;------------------------------------------------------------------------------;
+; Função Print Defeat													       ;
+;------------------------------------------------------------------------------;
+Defeat:			PUSH 	R1
+
+				MOV 	R1, 10d					; Recupera o valor da linha onde o começará a exibição das linhas
+				MOV		M[RowIndex], R1			; Escreve esse valor no Row Position do cursor
+				SHL 	R1, ROW_SHIFT
+				MOV 	M[CURSOR], R1			
+				MOV		R1,	DEFEAT1				; Joga na "fila" de impressão o endereço da primeira linha
+				MOV  	M[TextIndex], R1		
+				MOV 	R1, 0d
+
+	REPDEF:		CMP 	R1, 4d					; Chama printstring da prox linha até todas as 4 linhas forem impressas
+				JMP.Z 	ENDREPD
+				CALL 	PrintString
+				INC 	M[TextIndex]
+				INC 	R1
+				JMP 	REPDEF
+
+	ENDREPD: 	POP		R1
+				CALL 	Halt					; Para o programa
+
+;------------------------------------------------------------------------------;
+; Função Print Victory													       ;
+;------------------------------------------------------------------------------;
+Victory:		PUSH 	R1
+
+				MOV 	R1, 10d					
+				MOV		M[RowIndex], R1			
+				SHL 	R1, ROW_SHIFT
+				MOV 	M[CURSOR], R1			
+				MOV		R1,	VICTORY1
+				MOV  	M[TextIndex], R1
+				MOV 	R1, 0d
+
+	REPVIC:		CMP 	R1, 4d
+				JMP.Z 	ENDREPV
+				CALL 	PrintString
+				INC 	M[TextIndex]
+				INC 	R1
+				JMP 	REPVIC
+
+	ENDREPV: 	POP		R1
+				CALL 	Halt
+
 ;------------------------------------------------------------------------------
-; Função SetPacman
+; Função Score
 ;------------------------------------------------------------------------------
+Score:			PUSH	R1
+				PUSH 	R2
+				PUSH 	R3 
+				PUSH 	R4
+				
+				MOV		R1, M[ScorePoint] 		;Recuperar o valor dos pontosna memória
+				INC		R1						;Incrementar o ponto
+				MOV		M[ScorePoint], R1		;Guardar novamente
+				
+				CMP 	R1, MAX_SCORE			;Comparamos da pontuação atual com o valor MAX
+				CALL.Z 	Victory					;Caso sejam iguais, chama a função que termina o jogo
+
+				;----------------------------;
+				; Centena	 	             ;
+				;----------------------------;
+
+				MOV		R2, 100d				;Divide a pontuação por 100 e guarda o resto
+				DIV 	R1, R2
+				
+				MOV 	R3, 1d					;Calcular o primeiro endereço na memória
+				SHL 	R3, 8d
+				MOV		R4, 20d
+				OR		R3, R4
+
+				MOV 	M[CURSOR], R3			;Guardar o primeiro endereço na posição de escrita
+				MOV 	R4, R1 
+				ADD 	R4, '0'
+				MOV		M[IO_WRITE], R4
+
+				;----------------------------;
+				; Dezena	 	             ;
+				;----------------------------;				
+
+				MOV		R1, R2					
+				MOV 	R2, 10d					;Divide a pontuação por 10 e guarda o resto
+
+				DIV 	R1, R2
+				
+				INC 	R3						;INC na posição atual
+				MOV 	M[CURSOR], R3
+				MOV 	R4, R1
+				ADD 	R4, '0'
+				MOV		M[IO_WRITE], R4
+
+				;----------------------------;
+				; Unidade	 	             ;
+				;----------------------------;	
+
+				INC 	R3
+				MOV 	M[CURSOR], R3
+				ADD		R2, '0'
+				MOV		M[IO_WRITE], R2
+
+
+
+				POP 	R4
+				POP 	R3
+				POP 	R2
+				POP		R1
+				RET
+
+;------------------------------------------------------------------------------;
+; ZONA IV - II: Funções fantasma											   ;
+;        Funções utilizadas pelos fantasmas ou para eles.					   ;
+;------------------------------------------------------------------------------;
+;------------------------------------------------------------------------------;
+; Função AddressGhost															   ;
+;------------------------------------------------------------------------------;
+
+AddressGhost:	PUSH R1
+
+				MOV R1, LINHA1NIVEL
+				ADD R1, M[Ghost_Spawn_P1]
+				MOV M[Ghost_Address1], R1
+
+				MOV R1, LINHA1NIVEL
+				ADD R1, M[Ghost_Spawn_P2]
+				MOV M[Ghost_Address2], R1
+
+				MOV R1, LINHA1NIVEL
+				ADD R1, M[Ghost_Spawn_P3]
+				MOV M[Ghost_Address3], R1
+
+				MOV R1, LINHA1NIVEL
+				ADD R1, M[Ghost_Spawn_P3]
+				MOV M[Ghost_Address3], R1
+
+				POP R1
+				RET
+;------------------------------------------------------------------------------;
+; Função SetPacman															   ;
+;------------------------------------------------------------------------------;
 SetPacman:		PUSH 	R1
 				PUSH 	R2
 
@@ -200,6 +362,7 @@ SetPacman:		PUSH 	R1
 				MOV 	M[CURSOR],R1			; Define cursor como o endereço gerado por R1 || R2
 				MOV 	R1, PACMAN_CRT			; Define R1 como o Caracter "Z"
 				MOV 	M[IO_WRITE], R1			; Escreve na posição definida o Caracter "Z"
+
 ;----------------------------;
 ; Sub Função AddressPacman 	 ;
 ;----------------------------;
@@ -218,18 +381,6 @@ SetPacman:		PUSH 	R1
 				RET
 
 ;------------------------------------------------------------------------------
-; Função Score
-;------------------------------------------------------------------------------
-Score:			PUSH	R1
-				
-				MOV		R1, M[ScorePoint]
-				INC		R1
-				
-				POP		R1
-				RET
-
-
-;------------------------------------------------------------------------------
 ; Funções de Movimentação
 ;------------------------------------------------------------------------------
 ;---------------------------------------------;
@@ -243,7 +394,7 @@ MoveTop:		PUSH	R1
 				;--------------------;
 				
 				MOV		R1, M[Pac_Address]		;R1 recebe o endereço atual do PACMAN
-				SUB  	R1, COLUMN_JUMP			;Subtrai o suficiente na memória para checar a posição superir
+				SUB  	R1, LINE_JUMP			;Subtrai o suficiente na memória para checar a posição superir
 				
 				MOV 	R2, M[R1]				;R2 recebe o Caractér no endereço R1
 				CMP		R2, '#'					;Verifica se R2 é o Caractér "#", que representa a parede
@@ -256,10 +407,10 @@ MoveTop:		PUSH	R1
 				; Modificar Endereço ;
 				;--------------------;
 
-				ADD 	R1, COLUMN_JUMP			;Retorna R1 ao endereço original
+				ADD 	R1, LINE_JUMP			;Retorna R1 ao endereço original
 				MOV		R2, ' '					;Define R2 = ' '
 				MOV		M[R1], R2				;"Valor" de R1 recebe "Valor" de R2, o ' ' no caso.
-				SUB		R1, COLUMN_JUMP			;Retorna o R1 para a posição futura
+				SUB		R1, LINE_JUMP			;Retorna o R1 para a posição futura
 				MOV 	R2, PACMAN_CRT			;Definte R2 = 'Z'
 				MOV		M[R1], R2				;"Valor" de R1 recebe "Valor" de R2, o 'Z' no caso.
 				MOV		M[Pac_Address], R1		;Endereço de PACMAN passa a ser o endereço R1
@@ -377,7 +528,7 @@ MoveBottom:		PUSH	R1
 				;--------------------;
 				
 				MOV		R1, M[Pac_Address]		;R1 recebe o endereço atual do PACMAN
-				ADD  	R1, COLUMN_JUMP			;Subtrai o suficiente na memória para checar a posição superir
+				ADD  	R1, LINE_JUMP			;Subtrai o suficiente na memória para checar a posição superior
 				
 				MOV 	R2, M[R1]				;R2 recebe o Caractér no endereço R1
 				CMP		R2, '#'					;Verifica se R2 é o Caractér "#", que representa a parede
@@ -390,10 +541,10 @@ MoveBottom:		PUSH	R1
 				; Modificar Endereço ;
 				;--------------------;
 
-				SUB 	R1, COLUMN_JUMP			;Retorna R1 ao endereço original
+				SUB 	R1, LINE_JUMP			;Retorna R1 ao endereço original
 				MOV		R2, ' '					;Define R2 = ' '
 				MOV		M[R1], R2				;"Valor" de R1 recebe "Valor" de R2, o ' ' no caso.
-				ADD		R1, COLUMN_JUMP			;Retorna o R1 para a posição futura
+				ADD		R1, LINE_JUMP			;Retorna o R1 para a posição futura
 				MOV 	R2, PACMAN_CRT			;Definte R2 = 'Z'
 				MOV		M[R1], R2				;"Valor" de R1 recebe "Valor" de R2, o 'Z' no caso.
 				MOV		M[Pac_Address], R1		;Endereço de PACMAN passa a ser o endereço R1
@@ -591,11 +742,11 @@ Timer: 			PUSH 	R1
 				CMP 	R1, ON
 				CALL.Z 	MoveRight
 
-				MOV 	R1, M[Pac_Move_Left]
+				MOV 	R1, M[Pac_Move_Bottom]
 				CMP 	R1, ON
 				CALL.Z 	MoveBottom
 
-				MOV 	R1, M[Pac_Move_Bottom]
+				MOV 	R1, M[Pac_Move_Left]
 				CMP 	R1, ON
 				CALL.Z 	MoveLeft
 
@@ -632,8 +783,10 @@ Main:			ENI
 				MOV		M[ CURSOR ], R1
 
 				CALL 	PrintTela
+				CALL 	AddressGhost
 				CALL 	SetPacman
 				CALL	StartTimer
+
 
 				
 Cycle: 			BR		Cycle
