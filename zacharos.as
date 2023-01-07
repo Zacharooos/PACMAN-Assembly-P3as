@@ -30,7 +30,7 @@ PACMAN_SPAWN_C	EQU		45d
 PACMAN_DIST		EQU		6D2h	; Distância de 1909 Caracteres após o início da string 1
 LINE_JUMP		EQU		51h		; Distância até chegar ao caractér imediamente superior ou inferior
 
-MAX_SCORE		EQU 	150d 	; Quantidade de pontos máxima para encerrar o jogo
+MAX_SCORE		EQU 	200d 	; Quantidade de pontos máxima para encerrar o jogo
 ;------------------------------------------------------------------------------
 ; ZONA II: definicao de variaveis
 ;          Pseudo-instrucoes : WORD - palavra (16 bits)
@@ -49,42 +49,54 @@ Lifes 			WORD	3d		;Variável que guarda a quantidade de vidas
 Pac_Column		WORD	0d		;Variável que guarda a posição atual do PAC (Coluna)
 Pac_Row			WORD	0d		;Variável que guarda a posição atual do PAC (Linha)
 Pac_Address		WORD	0d		;Variável que guarda a posição atual do PAC (Endereço)?
+Pac_Hearth		WORD	3d		;Variável que guarda a vida atual do PAC
 
 Pac_Move_Top	WORD	OFF		;Comando para mover para cima
 Pac_Move_Right	WORD	OFF		;Comando para mover para direita
 Pac_Move_Bottom	WORD	OFF		;Comando para mover para baixo
 Pac_Move_Left	WORD	OFF		;Comando para mover para esquerda
 
-Ghost_Spawn_P1 	WORD	33Fh	;Número de casas que é necessário percorrer na memória para chegar no ponto de spawn
-Ghost_Spawn_P2 	WORD	373h
-Ghost_Spawn_P3 	WORD	6C0h
-Ghost_Spawn_P4 	WORD	73Fh
+Ghost_Spawn_P1 	WORD	33Eh	;33E Número de casas que é necessário percorrer na memória para chegar no ponto de spawn
+Ghost_Spawn_P2 	WORD	372h	;373
+Ghost_Spawn_P3 	WORD	66Eh	;663 6C0h
+Ghost_Spawn_P4 	WORD	69Ch	;6ED
 
+Ghost_Eat 		WORD 	0h
 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ;	Ghosts							;
 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 
-Ghost_Row1		WORD	11d		;Posição da linha de cada fantasma
-Ghost_Row2		WORD	11d
-Ghost_Row3		WORD	21d
-Ghost_Row4		WORD	22d
+Ghost_Row1		WORD	10d		;Posição da linha de cada fantasma
+Ghost_Row2		WORD	10d
+Ghost_Row3		WORD	20d
+Ghost_Row4		WORD	21d
+Ghost_RowT		WORD	0d		;Guarda o valor do fantasma atual (Para consideração em funções)
 
-Ghost_Column1 	WORD	47d		;Posição da coluna de cada fantasma
-Ghost_Column2	WORD	99d
-Ghost_Column3	WORD	52d
-Ghost_Column4	WORD	99d
+;possível diminuir 1
+Ghost_Column1 	WORD	20d		;Posição da coluna de cada fantasma
+Ghost_Column2	WORD	72d
+Ghost_Column3	WORD	26d
+Ghost_Column4	WORD	72d
+Ghost_ColumnT	WORD	0d
 
 Ghost_Address1	WORD	0h		;Posição na memória do fantasma, vazios até chamar address ghosts
 Ghost_Address2	WORD	0h
 Ghost_Address3	WORD	0h
 Ghost_Address4	WORD	0h
+Ghost_AddressT	WORD	0h
+
+Ghost_Shit1 	WORD 	'.'
+Ghost_Shit2 	WORD 	'.'
+Ghost_Shit3 	WORD 	'.'
+Ghost_Shit4 	WORD 	'.'
+Ghost_ShitT 	WORD 	'.'
 
 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ;	Mapas							;
 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 
 LINHA1NIVEL     STR 	'################################################################################', FIM_TEXTO
-LINHA2NIVEL     STR 	'#=-=-=-=-=-=-PLACAR:000-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=VIDAS:00=-=-=-=-=-=-#', FIM_TEXTO
+LINHA2NIVEL     STR 	'#=-=-=-=-=-=-PLACAR:000-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=VIDAS: 3=-=-=-=-=-=-#', FIM_TEXTO
 LINHA3NIVEL     STR 	'################################################################################', FIM_TEXTO
 LINHA4NIVEL 	STR 	'#..............###########....................####.....###.....................#', FIM_TEXTO
 LINHA5NIVEL 	STR 	'#..............###########....................####.....###.....................#', FIM_TEXTO
@@ -110,7 +122,7 @@ LINHA24NIVEL 	STR 	'############################################################
 
 DEFEAT1			STR		'# = = = = = = = = = = = = #==========================# = = = = = = = = = = = = #', FIM_TEXTO
 DEFEAT2			STR		'# = = = = = = = = = = = = # = = VOCE PERDEU MESMO ?= # = = = = = = = = = = = = #', FIM_TEXTO
-DEFEAT3			STR		'# = = = = = = = = = = = = # = = = = =OTARIO= = = = = # = = = = = = = = = = = = #', FIM_TEXTO
+DEFEAT3			STR		'# = = = = = = = = = = = = # = 666 = =OTARIO= = = = = # = = = = = = = = = = = = #', FIM_TEXTO
 DEFEAT4			STR		'# = = = = = = = = = = = = #==========================# = = = = = = = = = = = = #', FIM_TEXTO
 
 VICTORY1		STR		'# = = = = = = = = = = = = #==========================# = = = = = = = = = = = = #', FIM_TEXTO
@@ -173,7 +185,7 @@ PrintString:	PUSH 	R1
 				MOV 	R1, 0d
 				MOV 	M[ColumnIndex], R1
 				MOV 	R1, M[RowIndex]
-				SHL 	R1, 8d
+				SHL 	R1, ROW_SHIFT
 				MOV 	M[CURSOR], R1
 				
 				POP 	R2
@@ -271,7 +283,7 @@ Score:			PUSH	R1
 				DIV 	R1, R2
 				
 				MOV 	R3, 1d					;Calcular o primeiro endereço na memória
-				SHL 	R3, 8d
+				SHL 	R3, ROW_SHIFT
 				MOV		R4, 20d
 				OR		R3, R4
 
@@ -304,8 +316,6 @@ Score:			PUSH	R1
 				ADD		R2, '0'
 				MOV		M[IO_WRITE], R2
 
-
-
 				POP 	R4
 				POP 	R3
 				POP 	R2
@@ -317,28 +327,342 @@ Score:			PUSH	R1
 ;        Funções utilizadas pelos fantasmas ou para eles.					   ;
 ;------------------------------------------------------------------------------;
 ;------------------------------------------------------------------------------;
-; Função AddressGhost															   ;
+; Função AddressGhost														   ;
 ;------------------------------------------------------------------------------;
 
 AddressGhost:	PUSH R1
 
-				MOV R1, LINHA1NIVEL
-				ADD R1, M[Ghost_Spawn_P1]
+				MOV R1, LINHA11NIVEL
+				ADD R1, 20d
 				MOV M[Ghost_Address1], R1
 
-				MOV R1, LINHA1NIVEL
-				ADD R1, M[Ghost_Spawn_P2]
+				MOV R1, LINHA11NIVEL
+				ADD R1, 72d
 				MOV M[Ghost_Address2], R1
 
-				MOV R1, LINHA1NIVEL
-				ADD R1, M[Ghost_Spawn_P3]
+				MOV R1, LINHA21NIVEL
+				ADD R1, 26d
 				MOV M[Ghost_Address3], R1
 
-				MOV R1, LINHA1NIVEL
-				ADD R1, M[Ghost_Spawn_P3]
-				MOV M[Ghost_Address3], R1
+				MOV R1, LINHA22NIVEL
+				ADD R1, 72d
+				MOV M[Ghost_Address4], R1
 
 				POP R1
+				RET
+
+;------------------------------------------------------------------------------;
+; Função MoveGhost															   ;
+;------------------------------------------------------------------------------;
+MoveGhost:		PUSH 	R1
+				PUSH 	R2
+				PUSH 	R3
+				PUSH 	R4
+
+				MOV 	R1, M[Pac_Address]
+				MOV 	R2, 4d
+				DIV 	R1, R2 
+
+				CMP		R2, 0d
+				JMP.Z	GMoveTop
+
+				CMP		R2, 1d
+				JMP.Z	GMoveRight
+
+				CMP		R2, 2d
+				JMP.Z	GMoveBot
+		
+				CMP		R2, 3d
+				JMP.Z	GMoveLeft
+	
+	; Ideia -> Verificar a parede e mover, se não for possível, inverte o movimento
+	GMoveTop:	MOV 	R1, M[Ghost_AddressT]	;Recebe endereço do fantasma
+				SUB 	R1, LINE_JUMP			;Acessa a posição imediatamente superior.
+
+				;--------------------;
+				;  Verificar Parede  ;
+				;--------------------;
+
+				MOV 	R2, M[R1]				
+				CMP 	R2, '#'					;Realiza a comparação, caso impossível, pula
+				JMP.Z 	GMoveRight	
+
+				CMP 	R2, 'X'
+				JMP.Z 	GMoveEnd
+
+				CMP 	R2, PACMAN_CRT
+				CALL.Z 	RespawnPacman
+
+				CMP 	R2, PACMAN_CRT
+				JMP.Z 	GMoveEnd
+
+				MOV 	R4, R2
+
+				;--------------------;
+				; Modificar Endereço ;
+				;--------------------;
+
+				ADD 	R1, LINE_JUMP
+				MOV 	R3, M[Ghost_ShitT]
+				MOV 	R2, R3
+				MOV 	M[R1], R2
+				SUB 	R1, LINE_JUMP
+				MOV 	R2, 'X'
+				MOV 	M[R1], R2
+				MOV 	M[Ghost_AddressT], R1
+
+				;--------------------;
+				;    Mostrar Tela    ;
+				;--------------------;
+				;  Posição Original  ;
+				;--------------------;
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	R2, M[Ghost_ColumnT]
+
+				SHL 	R1, ROW_SHIFT
+				OR 		R1, R2
+
+				MOV 	M[CURSOR], R1
+				MOV 	R2, M[Ghost_ShitT]
+				MOV 	M[IO_WRITE], R2
+
+				;--------------------;
+				;    Mostrar Tela    ;
+				;--------------------;
+				;  Posição Original  ;
+				;--------------------;
+
+				DEC 	M[Ghost_RowT]
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	R2, M[Ghost_ColumnT]
+
+				SHL 	R1, ROW_SHIFT
+				OR 		R1, R2
+
+				MOV 	M[CURSOR], R1
+				MOV 	R2, 'X'
+				MOV 	M[IO_WRITE], R2
+
+				MOV 	M[Ghost_ShitT], R4
+
+				JMP 	GMoveEnd
+
+	GMoveRight:	MOV 	R1, M[Ghost_AddressT]
+				INC 	R1						;Acessa a posição imediatamente superior.
+
+				;--------------------;
+				;  Verificar Parede  ;
+				;--------------------;
+
+				MOV 	R2, M[R1]				
+				CMP 	R2, '#'					;Realiza a comparação, caso impossível, pula
+				JMP.Z 	GMoveBot
+
+				CMP 	R2, 'X'
+				JMP.Z 	GMoveEnd
+
+				CMP 	R2, PACMAN_CRT
+				CALL.Z 	RespawnPacman
+
+				CMP 	R2, PACMAN_CRT
+				JMP.Z 	GMoveEnd
+
+				MOV 	R4, R2
+				;--------------------;
+				; Modificar Endereço ;
+				;--------------------;
+
+				DEC 	R1
+				MOV 	R3, M[Ghost_ShitT]
+				MOV 	R2, R3
+				MOV 	M[R1], R2
+
+				INC 	R1
+
+				MOV 	R2, 'X'
+				MOV 	M[R1], R2
+				INC 	M[Ghost_AddressT]
+
+				;--------------------;
+				;    Mostrar Tela    ;
+				;--------------------;
+				;  Posição Original  ;
+				;--------------------;
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	R2, M[Ghost_ColumnT]
+
+				SHL 	R1, ROW_SHIFT
+				OR 		R1, R2
+
+				MOV 	M[CURSOR], R1
+				MOV 	R2, M[Ghost_ShitT]
+				MOV 	M[IO_WRITE], R2
+
+				;--------------------;
+				;    Mostrar Tela    ;
+				;--------------------;
+				;  Posição Original  ;
+				;--------------------;
+
+				INC 	M[Ghost_ColumnT]
+				INC 	R1
+
+				MOV 	M[CURSOR], R1
+				MOV 	R2, 'X'
+				MOV 	M[IO_WRITE], R2
+
+				MOV 	M[Ghost_ShitT], R4
+
+				JMP 	GMoveEnd
+
+	GMoveBot:	MOV 	R1, M[Ghost_AddressT]
+				ADD 	R1, LINE_JUMP			;Acessa a posição imediatamente superior.
+
+				;--------------------;
+				;  Verificar Parede  ;
+				;--------------------;
+
+				MOV 	R2, M[R1]				
+				CMP 	R2, '#'					;Realiza a comparação, caso impossível, pula
+				JMP.Z 	GMoveLeft
+
+				CMP 	R2, 'X'
+				JMP.Z 	GMoveEnd
+
+				CMP 	R2, PACMAN_CRT
+				CALL.Z 	RespawnPacman
+
+				CMP 	R2, PACMAN_CRT
+				JMP.Z 	GMoveEnd
+
+				MOV 	R4, R2
+				;--------------------;
+				; Modificar Endereço ;
+				;--------------------;
+
+				SUB 	R1, LINE_JUMP
+				MOV 	R3, M[Ghost_ShitT]
+				MOV 	R2, R3
+				MOV 	M[R1], R2
+				ADD 	R1, LINE_JUMP
+				MOV 	R2, 'X'
+				MOV 	M[R1], R2
+				MOV 	M[Ghost_AddressT], R1
+
+				;--------------------;
+				;    Mostrar Tela    ;
+				;--------------------;
+				;  Posição Original  ;
+				;--------------------;
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	R2, M[Ghost_ColumnT]
+
+				SHL 	R1, ROW_SHIFT
+				OR 		R1, R2
+
+				MOV 	M[CURSOR], R1
+				MOV 	R2, M[Ghost_ShitT]
+				MOV 	M[IO_WRITE], R2
+
+				;--------------------;
+				;    Mostrar Tela    ;
+				;--------------------;
+				;  Posição Original  ;
+				;--------------------;
+
+				INC 	M[Ghost_RowT]
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	R2, M[Ghost_ColumnT]
+
+				SHL 	R1, ROW_SHIFT
+				OR 		R1, R2
+
+				MOV 	M[CURSOR], R1
+				MOV 	R2, 'X'
+				MOV 	M[IO_WRITE], R2
+
+				MOV 	M[Ghost_ShitT], R4
+
+				JMP 	GMoveEnd
+
+	GMoveLeft:	MOV 	R1, M[Ghost_AddressT]
+				DEC 	R1						;Acessa a posição imediatamente superior.
+
+				;--------------------;
+				;  Verificar Parede  ;
+				;--------------------;
+
+				MOV 	R2, M[R1]				
+				CMP 	R2, '#'					;Realiza a comparação, caso impossível, pula
+				JMP.Z 	GMoveEnd
+
+				CMP 	R2, 'X'
+				JMP.Z 	GMoveEnd
+
+				CMP 	R2, PACMAN_CRT
+				CALL.Z 	RespawnPacman
+
+				CMP 	R2, PACMAN_CRT
+				JMP.Z 	GMoveEnd
+
+				MOV 	R4, R2
+				;--------------------;
+				; Modificar Endereço ;
+				;--------------------;
+
+				INC 	R1
+				MOV 	R3, M[Ghost_ShitT]
+				MOV 	R2, R3
+				MOV 	M[R1], R2
+
+				DEC 	R1
+
+				MOV 	R2, 'X'
+				MOV 	M[R1], R2
+				DEC 	M[Ghost_AddressT]
+
+				;--------------------;
+				;    Mostrar Tela    ;
+				;--------------------;
+				;  Posição Original  ;
+				;--------------------;
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	R2, M[Ghost_ColumnT]
+
+				SHL 	R1, ROW_SHIFT
+				OR 		R1, R2
+
+				MOV 	M[CURSOR], R1
+				MOV 	R2, M[Ghost_ShitT]
+				MOV 	M[IO_WRITE], R2
+
+				;--------------------;
+				;    Mostrar Tela    ;
+				;--------------------;
+				;  Posição Original  ;
+				;--------------------;
+
+				DEC 	M[Ghost_ColumnT]
+				DEC 	R1
+
+				MOV 	M[CURSOR], R1
+				MOV 	R2, 'X'
+				MOV 	M[IO_WRITE], R2
+
+				MOV 	M[Ghost_ShitT], R4
+
+				JMP 	GMoveEnd
+
+	GMoveEnd:	POP 	R4
+				POP 	R3	
+				POP 	R2
+				POP 	R1
 				RET
 ;------------------------------------------------------------------------------;
 ; Função SetPacman															   ;
@@ -374,11 +698,85 @@ SetPacman:		PUSH 	R1
 				MOV 	M[R1], R2				;Define a posição de memória R1 como "Z"
 
 ;----------------------------;
+; Sub Função ResetMov    	 ;
+;----------------------------;
+
+				MOV 	R2, OFF
+				MOV 	M[Pac_Move_Top], R2
+				MOV 	M[Pac_Move_Right], R2
+				MOV 	M[Pac_Move_Bottom], R2
+				MOV 	M[Pac_Move_Left], R2
+
+;----------------------------;
 ; Encerramento 	             ;
 ;----------------------------;
 				POP 	R2
 				POP 	R1
 				RET
+
+;------------------------------------------------------------------------------;
+; Função RespawnPacman														   ;
+;------------------------------------------------------------------------------;
+RespawnPacman:	PUSH 	R1
+				PUSH 	R2
+				PUSH 	R3
+
+;----------------------------;
+; limpar a posição onde morre;
+;----------------------------;
+
+				MOV 	R1, M[Pac_Row]
+				MOV 	R2, M[Pac_Column]
+				SHL		R1, ROW_SHIFT
+				OR 		R1, R2
+
+				MOV 	M[CURSOR], R1
+				MOV 	R1, ' '
+				MOV 	M[IO_WRITE], R1			
+
+				MOV 	R2, M[Pac_Address]		; Atualiza o o endereço do pacmano (limpa o endereço antigo)
+				MOV 	M[R2], R1 
+
+				CALL 	SetPacman 				; Chamar a função que Spawna o pacman
+
+;----------------------------;
+; Posição na memória (vida)	 ;
+;----------------------------;
+
+				MOV 	R1, 1d
+				SHL 	R1, ROW_SHIFT
+				MOV		R2, 66d
+				OR		R1, R2
+				MOV 	R3, R1
+
+;----------------------------;
+; Diminuir uma vida			 ;
+;----------------------------;
+
+				MOV		R1, M[Pac_Hearth]
+				DEC		R1
+				MOV		M[Pac_Hearth], R1
+
+;----------------------------;
+; Mudar informação na tela	 ;
+;----------------------------;
+
+				MOV 	R1, '0'
+				MOV 	M[CURSOR], R3
+				ADD 	R1, M[Pac_Hearth]
+				MOV		M[IO_WRITE], R1
+
+	zacharos:	NOP
+				MOV 	R1, M[Pac_Hearth]
+				CMP		R1, 0d
+				CALL.Z 	Defeat
+
+				POP 	R3
+				POP 	R2
+				POP 	R1
+
+				RET
+
 
 ;------------------------------------------------------------------------------
 ; Funções de Movimentação
@@ -399,6 +797,12 @@ MoveTop:		PUSH	R1
 				MOV 	R2, M[R1]				;R2 recebe o Caractér no endereço R1
 				CMP		R2, '#'					;Verifica se R2 é o Caractér "#", que representa a parede
 				JMP.Z 	UpBlock					;Se for, não iremos realizar nenhuma alteração
+
+				CMP 	R2, 'X'					;Verifica se o fantasma esta naquela posiçãos
+				CALL.Z 	RespawnPacman			;Se sim, mato	
+
+				CMP 	R2, 'X'					;Pula o ciclo de movimentação
+				CALL.Z 	LeftBlock
 
 				CMP		R2, '.'					;Verifica se o caractér é '.'
 				CALL.Z	Score					;Se for, Marca um ponto
@@ -470,6 +874,12 @@ MoveRight:		PUSH	R1
 				CMP		R2, '#'					;Verifica se R2 é o Caractér "#", que representa a parede
 				JMP.Z 	RightBlock				;Se for, não iremos realizar nenhuma alteração
 
+				CMP 	R2, 'X'					;Verifica se o fantasma esta naquela posiçãos
+				CALL.Z 	RespawnPacman			;Se sim, mato	
+
+				CMP 	R2, 'X'					;Pula o ciclo de movimentação
+				CALL.Z 	LeftBlock
+
 				CMP		R2, '.'					;Verifica se o caractér é '.'
 				CALL.Z	Score					;Se for, Marca um ponto
 
@@ -533,6 +943,12 @@ MoveBottom:		PUSH	R1
 				MOV 	R2, M[R1]				;R2 recebe o Caractér no endereço R1
 				CMP		R2, '#'					;Verifica se R2 é o Caractér "#", que representa a parede
 				JMP.Z 	BottomBlck				;Se for, não iremos realizar nenhuma alteração
+
+				CMP 	R2, 'X'					;Verifica se o fantasma esta naquela posiçãos
+				CALL.Z 	RespawnPacman			;Se sim, mato	
+
+				CMP 	R2, 'X'					;Pula o ciclo de movimentação
+				CALL.Z 	LeftBlock
 
 				CMP		R2, '.'					;Verifica se o caractér é '.'
 				CALL.Z	Score					;Se for, Marca um ponto
@@ -603,6 +1019,12 @@ MoveLeft:		PUSH	R1
 				MOV 	R2, M[R1]				;R2 recebe o Caractér no endereço R1
 				CMP		R2, '#'					;Verifica se R2 é o Caractér "#", que representa a parede
 				JMP.Z 	LeftBlock				;Se for, não iremos realizar nenhuma alteração
+
+				CMP 	R2, 'X'					;Verifica se o fantasma esta naquela posiçãos
+				CALL.Z 	RespawnPacman			;Se sim, mato	
+
+				CMP 	R2, 'X'					;Pula o ciclo de movimentação
+				CALL.Z 	LeftBlock
 
 				CMP		R2, '.'					;Verifica se o caractér é '.'
 				CALL.Z	Score					;Se for, Marca um ponto
@@ -733,6 +1155,125 @@ Key_Pr_Left: 	PUSH 	R1
 ; Função que realiza a "contagem" do tempo    ;
 ;---------------------------------------------;
 Timer: 			PUSH 	R1
+				PUSH	R2
+				PUSH 	R3
+				PUSH 	R4
+
+				;testes
+
+				;MOVE G 1
+
+				MOV 	R1, M[Ghost_Row1]
+				MOV 	M[Ghost_RowT], R1
+
+				MOV 	R2, M[Ghost_Column1]
+				MOV 	M[Ghost_ColumnT], R2
+
+				MOV 	R3, M[Ghost_Address1]
+				MOV 	M[Ghost_AddressT], R3
+
+				MOV 	R4, M[Ghost_Shit1]
+				MOV 	M[Ghost_ShitT], R4
+
+				call MoveGhost
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	M[Ghost_Row1], R1
+
+				MOV 	R2, M[Ghost_ColumnT]
+				MOV 	M[Ghost_Column1], R2
+
+				MOV 	R3, M[Ghost_AddressT]
+				MOV 	M[Ghost_Address1], R3
+
+				MOV 	R4, M[Ghost_ShitT]
+				MOV 	M[Ghost_Shit1], R4
+				
+				;MOVE G 2
+
+				MOV 	R1, M[Ghost_Row2]
+				MOV 	M[Ghost_RowT], R1
+
+				MOV 	R2, M[Ghost_Column2]
+				MOV 	M[Ghost_ColumnT], R2
+
+				MOV 	R3, M[Ghost_Address2]
+				MOV 	M[Ghost_AddressT], R3
+
+				MOV 	R4, M[Ghost_Shit2]
+				MOV 	M[Ghost_ShitT], R4
+
+				call MoveGhost
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	M[Ghost_Row2], R1
+
+				MOV 	R2, M[Ghost_ColumnT]
+				MOV 	M[Ghost_Column2], R2
+
+				MOV 	R3, M[Ghost_AddressT]
+				MOV 	M[Ghost_Address2], R3
+
+				MOV 	R4, M[Ghost_ShitT]
+				MOV 	M[Ghost_Shit2], R4
+
+				;MOCE G 3
+
+				MOV 	R1, M[Ghost_Row3]
+				MOV 	M[Ghost_RowT], R1
+
+				MOV 	R2, M[Ghost_Column3]
+				MOV 	M[Ghost_ColumnT], R2
+
+				MOV 	R3, M[Ghost_Address3]
+				MOV 	M[Ghost_AddressT], R3
+
+				MOV 	R4, M[Ghost_Shit3]
+				MOV 	M[Ghost_ShitT], R4
+
+				call MoveGhost
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	M[Ghost_Row3], R1
+
+				MOV 	R2, M[Ghost_ColumnT]
+				MOV 	M[Ghost_Column3], R2
+
+				MOV 	R3, M[Ghost_AddressT]
+				MOV 	M[Ghost_Address3], R3
+
+				MOV 	R4, M[Ghost_ShitT]
+				MOV 	M[Ghost_Shit3], R4				
+
+				;MOVE G 4
+
+				MOV 	R1, M[Ghost_Row4]
+				MOV 	M[Ghost_RowT], R1
+
+				MOV 	R2, M[Ghost_Column4]
+				MOV 	M[Ghost_ColumnT], R2
+
+				MOV 	R3, M[Ghost_Address4]
+				MOV 	M[Ghost_AddressT], R3
+
+				MOV 	R4, M[Ghost_Shit4]
+				MOV 	M[Ghost_ShitT], R4	
+
+				call MoveGhost
+
+				MOV 	R1, M[Ghost_RowT]
+				MOV 	M[Ghost_Row4], R1
+
+				MOV 	R2, M[Ghost_ColumnT]
+				MOV 	M[Ghost_Column4], R2
+
+				MOV 	R3, M[Ghost_AddressT]
+				MOV 	M[Ghost_Address4], R3
+
+				MOV 	R4, M[Ghost_ShitT]
+				MOV 	M[Ghost_Shit4], R4
+
+				;end testes
 
 				MOV 	R1, M[Pac_Move_Top]		;Guarda em R1 o valor se sinal da Variável que diz se o PacMan move-se ou não.
 				CMP 	R1, ON					;Compara para checar se o valor está ligado
@@ -752,6 +1293,9 @@ Timer: 			PUSH 	R1
 
 				CALL 	StartTimer				;"Dispara" o tempo para acontecer um ciclo 
 
+				POP 	R4
+				POP 	R3
+				POP 	R2
 				POP 	R1
 				RTI
 
